@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node server/src/server.js",
+    "build": "npm run build --prefix client",
+    "postinstall": "npm install --prefix server && npm install --prefix client",
     "seed": "npm run seed --prefix server",
     "test": "npm test --prefix server",
-    "build": "npm run build --prefix client",
     "server": "npm run dev --prefix server",
     "client": "npm run dev --prefix client"
   },
