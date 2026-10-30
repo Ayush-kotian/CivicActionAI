@@ -120,7 +120,7 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-3.5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-3.5" autoComplete="off">
           {mode === 'signup' ? (
             <>
               {/* Name */}
@@ -135,7 +135,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
+                    placeholder="Enter your full name"
+                    autoComplete="off"
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -153,7 +154,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. rahul"
+                    placeholder="Enter username"
+                    autoComplete="off"
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -171,7 +173,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                     required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="e.g. 9876543210"
+                    placeholder="10-digit mobile number"
+                    autoComplete="off"
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -189,7 +192,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. rahul@example.com"
+                    placeholder="Enter email address"
+                    autoComplete="off"
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -208,7 +212,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                   required
                   value={loginIdentifier}
                   onChange={(e) => setLoginIdentifier(e.target.value)}
-                  placeholder="Enter email or username (e.g. rahul)"
+                  placeholder="Enter email or username"
+                  autoComplete="off"
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
@@ -234,6 +239,7 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                autoComplete="new-password"
                 className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -254,6 +260,7 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
