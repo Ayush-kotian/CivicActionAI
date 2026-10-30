@@ -17,11 +17,12 @@ import { LocationPicker } from '../components/LocationPicker';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { DuplicateAlert } from '../components/DuplicateAlert';
 import { submitReport, getStoredUser } from '../services/api';
-import { Report, CivicCategory } from '../types';
+import { Report, CivicCategory, User } from '../types';
 
 interface SubmitReportProps {
   onNavigate: (view: string, param?: string) => void;
   onOpenAuth?: () => void;
+  currentUser?: User | null;
 }
 
 const CATEGORY_OPTIONS: (CivicCategory | 'Auto Detect')[] = [
@@ -37,8 +38,8 @@ const CATEGORY_OPTIONS: (CivicCategory | 'Auto Detect')[] = [
   'Other'
 ];
 
-export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate, onOpenAuth }) => {
-  const user = getStoredUser();
+export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate, onOpenAuth, currentUser }) => {
+  const user = currentUser !== undefined ? currentUser : getStoredUser();
 
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string>('Auto Detect');

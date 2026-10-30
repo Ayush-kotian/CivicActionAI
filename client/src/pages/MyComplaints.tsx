@@ -18,13 +18,14 @@ import type { Report, User } from '../types';
 interface MyComplaintsProps {
   onNavigate: (view: string, param?: string) => void;
   onOpenAuth: () => void;
+  currentUser?: User | null;
 }
 
-export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAuth }) => {
+export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAuth, currentUser }) => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const user: User | null = getStoredUser();
+  const user: User | null = currentUser !== undefined ? currentUser : getStoredUser();
 
   const loadMyComplaints = async () => {
     if (!user) {

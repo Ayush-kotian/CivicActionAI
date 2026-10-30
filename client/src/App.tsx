@@ -68,7 +68,13 @@ export function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
         {currentView === 'home' && <LandingPage onNavigate={navigateTo} />}
-        {currentView === 'report' && <SubmitReport onNavigate={navigateTo} />}
+        {currentView === 'report' && (
+          <SubmitReport
+            onNavigate={navigateTo}
+            onOpenAuth={() => setCitizenAuthOpen(true)}
+            currentUser={currentUser}
+          />
+        )}
         {currentView === 'track' && (
           <CitizenTrack initialComplaintId={viewParam} onNavigate={navigateTo} />
         )}
@@ -76,6 +82,7 @@ export function App() {
           <MyComplaints
             onNavigate={navigateTo}
             onOpenAuth={() => setCitizenAuthOpen(true)}
+            currentUser={currentUser}
           />
         )}
         {currentView === 'admin' && (
@@ -100,7 +107,11 @@ export function App() {
         onSuccess={(u) => {
           setCurrentUser(u);
           if (u.role === 'citizen') {
-            navigateTo('my-complaints');
+            if (currentView === 'report') {
+              navigateTo('report');
+            } else {
+              navigateTo('my-complaints');
+            }
           }
         }}
       />
