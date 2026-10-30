@@ -8,12 +8,16 @@ export async function ensureDemoAdmin() {
       const hashedPassword = await bcrypt.hash('123456', 10);
       await User.create({
         name: 'Rajesh',
+        username: 'rajesh',
         email: 'rajesh@gmail.com',
         phone: '9876543210',
         password: hashedPassword,
         role: 'admin'
       });
       console.log('[Auth] Predefined single demo admin account verified (Rajesh - rajesh@gmail.com)');
+    } else if (!existingAdmin.username) {
+      existingAdmin.username = 'rajesh';
+      await existingAdmin.save();
     }
   } catch (err) {
     console.error('[Auth] Failed to initialize demo admin account:', err.message);

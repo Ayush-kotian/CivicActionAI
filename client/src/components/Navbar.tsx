@@ -38,9 +38,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     { key: 'report', label: 'Report Issue', icon: FilePlus2, highlight: true },
     { key: 'track', label: 'Track Status', icon: Search },
     ...(currentUser?.role === 'citizen'
-      ? [{ key: 'my-complaints', label: 'My Complaints', icon: FileText }]
+      ? [{ key: 'my-complaints', label: 'My Dashboard', icon: FileText }]
       : []),
-    { key: 'admin', label: 'Authority Desk', icon: LayoutDashboard },
+    ...(currentUser?.role !== 'citizen'
+      ? [{ key: 'admin', label: 'Authority Desk', icon: LayoutDashboard }]
+      : []),
     { key: 'hotspots', label: 'Hotspots', icon: Flame }
   ];
 

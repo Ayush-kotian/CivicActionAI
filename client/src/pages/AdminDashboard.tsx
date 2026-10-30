@@ -98,6 +98,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return () => clearTimeout(handler);
   }, [search]);
 
+  if (activeUser && activeUser.role === 'citizen') {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center animate-fade-in">
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-4">
+          <div className="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-extrabold text-slate-900">Authority Access Restricted</h2>
+          <p className="text-xs text-slate-600">
+            You are signed in as citizen ({activeUser.username || activeUser.name}). Normal citizen accounts cannot access the Municipal Authority Console.
+          </p>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => onNavigate('my-complaints')}
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              Go to My Citizen Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!activeUser || activeUser.role !== 'admin') {
     return (
       <AdminLoginView

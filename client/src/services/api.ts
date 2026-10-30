@@ -41,11 +41,11 @@ function getAuthHeaders(): HeadersInit {
 
 // --- Auth Endpoints ---
 
-export async function loginApi(email: string, password: string): Promise<AuthResponse> {
+export async function loginApi(identifier: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ identifier, password })
   });
   const json = await response.json();
   if (!response.ok) {
@@ -60,6 +60,7 @@ export async function loginApi(email: string, password: string): Promise<AuthRes
 
 export async function signupApi(
   name: string,
+  username: string,
   phone: string,
   email: string,
   password: string,
@@ -68,7 +69,7 @@ export async function signupApi(
   const response = await fetch(`${BASE_URL}/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, phone, email, password, confirmPassword })
+    body: JSON.stringify({ name, username, phone, email, password, confirmPassword })
   });
   const json = await response.json();
   if (!response.ok) {

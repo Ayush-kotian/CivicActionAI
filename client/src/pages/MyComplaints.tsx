@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Search,
-  ExternalLink,
   PlusCircle,
   Clock,
-  Layers,
   MapPin,
   RefreshCw,
-  Loader2
+  Loader2,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { fetchMyReports, getStoredUser } from '../services/api';
 import { PriorityBadge } from '../components/PriorityBadge';
@@ -45,7 +45,7 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
 
   useEffect(() => {
     loadMyComplaints();
-  }, [user?.email]);
+  }, [user?.email, user?.username]);
 
   if (!user) {
     return (
@@ -53,9 +53,9 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
         <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center mx-auto">
           <FileText className="w-7 h-7" />
         </div>
-        <h2 className="text-xl font-extrabold text-slate-900">Sign in to view your complaints</h2>
+        <h2 className="text-xl font-extrabold text-slate-900">Sign in to view your Citizen Dashboard</h2>
         <p className="text-xs text-slate-600">
-          Create or sign into your citizen account to track all issues you have submitted to municipal authorities.
+          Please sign in to access your dashboard, submit civic issues, and track your complaints.
         </p>
         <button
           type="button"
@@ -69,27 +69,26 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 sm:py-10 space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+    <div className="max-w-4xl mx-auto py-6 sm:py-10 space-y-6 animate-fade-in">
+      {/* Welcome Banner */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-blue-600 font-semibold text-xs tracking-wider uppercase">
-            <FileText className="w-4 h-4" />
-            <span>Citizen Workspace</span>
+          <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+            Citizen Workspace
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            My Submitted Complaints
+            Welcome, {user.username || user.name}
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Registered citizen account: <strong>{user.name}</strong> ({user.email})
+          <p className="text-xs text-slate-500 mt-1">
+            Track and monitor the status of civic complaints you have submitted.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={loadMyComplaints}
-            className="p-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl text-slate-600 hover:text-slate-900 transition"
+            className="p-2 border border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 hover:text-slate-900 transition"
             title="Refresh list"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -97,10 +96,10 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
           <button
             type="button"
             onClick={() => onNavigate('report')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center gap-1.5"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>New Complaint</span>
+            <span>Submit New Complaint</span>
           </button>
         </div>
       </div>
@@ -111,8 +110,9 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
         </div>
       )}
 
+      {/* Complaints Feed */}
       {loading ? (
-        <div className="py-20 text-center">
+        <div className="py-20 text-center bg-white rounded-2xl border border-slate-200">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
           <p className="text-xs text-slate-500 mt-2 font-medium">Fetching your complaints...</p>
         </div>
@@ -121,32 +121,38 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
           <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
             <FileText className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-slate-800">No complaints filed yet</h3>
+          <h3 className="text-base font-bold text-slate-800">No complaints submitted yet.</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            Whenever you submit a civic issue using your citizen account, it will appear here so you can monitor municipal action in real time.
+            Click the button to submit one.
           </p>
           <button
             type="button"
             onClick={() => onNavigate('report')}
-            className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
+            className="mt-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
           >
-            Submit an Issue Now
+            Submit New Complaint
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+            <span>Showing {reports.length} {reports.length === 1 ? 'complaint' : 'complaints'} registered by you</span>
+            <span className="text-emerald-700 font-semibold">Private & Verified Records</span>
+          </div>
+
           {reports.map((report) => (
             <div
               key={report.complaintId}
-              className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs hover:shadow-xs transition space-y-3"
+              className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs hover:shadow-xs transition space-y-3.5"
             >
+              {/* Top row: ID, Category, Priority, Status */}
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-blue-700 text-sm">
+                  <span className="font-mono font-extrabold text-blue-700 text-sm">
                     #{report.complaintId}
                   </span>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full border border-slate-200">
-                    {report.category}
+                  <span className="text-xs font-bold px-2.5 py-0.5 bg-slate-100 text-slate-800 rounded-full border border-slate-200">
+                    Category: {report.category}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -155,36 +161,44 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({ onNavigate, onOpenAu
                 </div>
               </div>
 
-              <div className="text-xs text-slate-800 font-sans leading-relaxed">
-                {report.summary || report.description}
+              {/* Problem / Description */}
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Problem Description:
+                </span>
+                <p className="text-sm text-slate-800 font-sans leading-relaxed">
+                  {report.description}
+                </p>
               </div>
 
-              {report.duplicatePossible && (
-                <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
-                  <Layers className="w-3 h-3 text-amber-600" />
-                  <span>Linked to existing issue #{report.duplicateOf || report.duplicateReportIds?.[0]} &bull; Corroborating evidence preserved</span>
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 text-xs text-slate-500">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{report.location?.address}</span>
-                  </div>
-                  <div className="flex items-center gap-1 hidden sm:flex">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{new Date(report.createdAt).toLocaleDateString()}</span>
-                  </div>
+              {/* Details grid: Location, Date, Priority */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+                <div className="flex items-start gap-1.5 text-slate-600">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Location: </strong>
+                    {report.location?.address || `${report.location?.latitude.toFixed(4)}, ${report.location?.longitude.toFixed(4)}`}
+                  </span>
                 </div>
 
+                <div className="flex items-center gap-1.5 text-slate-600 sm:justify-end">
+                  <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>
+                    <strong>Submitted: </strong>
+                    {new Date(report.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Track button */}
+              <div className="pt-2 flex justify-end">
                 <button
                   type="button"
                   onClick={() => onNavigate('track', report.complaintId)}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-semibold transition text-xs flex items-center gap-1 border border-blue-200"
+                  className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold transition text-xs flex items-center gap-1.5 border border-blue-200"
                 >
                   <Search className="w-3.5 h-3.5" />
-                  <span>Track Live Status</span>
+                  <span>Track Status</span>
                 </button>
               </div>
             </div>

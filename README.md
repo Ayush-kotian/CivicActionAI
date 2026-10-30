@@ -355,5 +355,5 @@ In accordance with hackathon evaluation guidelines:
 - **Repository**: Public GitHub Repository
 - **Branches**: Exactly **1 branch** (`main`)
 - **Repository Size**: **&lt; 10 MB** (no committed node_modules, .env files, or build caches)
-- **Audit Table**: See [IMPLEMENTATION_CHECKLIST.md](file:///C:/Users/Ayush/.gemini/antigravity/scratch/CivicActionAI/IMPLEMENTATION_CHECKLIST.md)
-- **Requirement Traceability**: See [REQUIREMENT_MATRIX.md](file:///C:/Users/Ayush/.gemini/antigravity/scratch/CivicActionAI/REQUIREMENT_MATRIX.md)
+- **Audit Table**: See [IMPLEMENTATION_CHECKLIST.md](./IMPLEMENTATION_CHECKLIST.md)
+- **Requirement Traceability**: See [REQUIREMENT_MATRIX.md](./REQUIREMENT_MATRIX.md)

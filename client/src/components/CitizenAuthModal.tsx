@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, Mail, Phone, X, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
+import { User, Lock, Mail, Phone, AtSign, X, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import { loginApi, signupApi } from '../services/api';
 import type { User as UserType } from '../types';
 
@@ -18,8 +18,10 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -33,8 +35,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
     setError('');
 
     if (mode === 'signup') {
-      if (!name.trim() || !phone.trim() || !email.trim() || !password || !confirmPassword) {
-        setError('Please fill in all required fields.');
+      if (!name.trim() || !username.trim() || !phone.trim() || !email.trim() || !password || !confirmPassword) {
+        setError('Please fill in all fields (Name, Username, Phone, Email, Password, Confirm Password).');
         return;
       }
       if (password.length < 6) {
@@ -48,7 +50,14 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
 
       try {
         setLoading(true);
-        const res = await signupApi(name, phone, email, password, confirmPassword);
+        const res = await signupApi(
+          name.trim(),
+          username.trim().toLowerCase(),
+          phone.trim(),
+          email.trim().toLowerCase(),
+          password,
+          confirmPassword
+        );
         if (res.user) {
           onSuccess(res.user);
           onClose();
@@ -59,20 +68,20 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
         setLoading(false);
       }
     } else {
-      if (!email.trim() || !password) {
-        setError('Please enter both email and password.');
+      if (!loginIdentifier.trim() || !password) {
+        setError('Please enter both Email/Username and password.');
         return;
       }
 
       try {
         setLoading(true);
-        const res = await loginApi(email, password);
+        const res = await loginApi(loginIdentifier.trim(), password);
         if (res.user) {
           onSuccess(res.user);
           onClose();
         }
       } catch (err: any) {
-        setError(err.message || 'Invalid email or password.');
+        setError(err.message || 'Invalid email/username or password.');
       } finally {
         setLoading(false);
       }
@@ -90,7 +99,7 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
             </h3>
             <p className="text-xs text-blue-100 mt-0.5">
               {mode === 'signin'
-                ? 'Sign in to submit and track your complaints'
+                ? 'Sign in to access your dashboard and submit complaints'
                 : 'Create your municipal citizen account'}
             </p>
           </div>
@@ -111,8 +120,8 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {mode === 'signup' && (
+        <form onSubmit={handleSubmit} className="p-6 space-y-3.5">
+          {mode === 'signup' ? (
             <>
               {/* Name */}
               <div>
@@ -126,7 +135,25 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Priya Sharma"
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Username */}
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Username <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <AtSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. rahul"
                     className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -149,26 +176,44 @@ export const CitizenAuthModal: React.FC<CitizenAuthModalProps> = ({
                   />
                 </div>
               </div>
-            </>
-          )}
 
-          {/* Email */}
-          <div>
-            <label className="text-xs font-semibold text-slate-700 block mb-1">
-              Email Address <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. citizen@example.com"
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
+              {/* Email */}
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. rahul@example.com"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Sign In - Username or Email */
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1">
+                Email or Username <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  required
+                  value={loginIdentifier}
+                  onChange={(e) => setLoginIdentifier(e.target.value)}
+                  placeholder="Enter email or username (e.g. rahul)"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Password */}
           <div>

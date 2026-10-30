@@ -4,18 +4,18 @@ import { signToken } from '../utils/jwt.js';
 
 /**
  * Register a new Citizen user
- * Required fields: Name, Phone Number, Email, Password, Confirm Password
+ * Required fields: Name, Username, Phone, Email, Password, Confirm Password
  * Password must contain at least 6 characters.
  * Role is strictly assigned as 'citizen'.
  */
 export async function signup(req, res, next) {
   try {
-    const { name, phone, email, password, confirmPassword } = req.body;
+    const { name, username, phone, email, password, confirmPassword } = req.body;
 
-    if (!name || !phone || !email || !password || !confirmPassword) {
+    if (!name || !username || !phone || !email || !password || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: 'All fields (Name, Phone Number, Email, Password, Confirm Password) are required.'
+        message: 'All fields (Name, Username, Phone, Email, Password, Confirm Password) are required.'
       });
     }
 
@@ -34,21 +34,26 @@ export async function signup(req, res, next) {
     }
 
     const cleanEmail = email.toLowerCase().trim();
+    const cleanUsername = username.toLowerCase().trim();
 
-    // Prevent registering with the predefined admin email
-    if (cleanEmail === 'rajesh@gmail.com') {
+    // Prevent registering with the predefined admin credentials
+    if (cleanEmail === 'rajesh@gmail.com' || cleanUsername === 'rajesh') {
       return res.status(400).json({
         success: false,
-        message: 'This email is reserved for the municipal administration system.'
+        message: 'This account identifier is reserved for municipal administration.'
       });
     }
 
-    // Check if user already exists
-    const existing = await User.findOne({ email: cleanEmail });
+    // Check if user already exists with this email or username
+    const existing = await User.findOne({
+      $or: [{ email: cleanEmail }, { username: cleanUsername }]
+    });
+
     if (existing) {
+      const field = existing.email === cleanEmail ? 'email address' : 'username';
       return res.status(409).json({
         success: false,
-        message: 'An account with this email address is already registered.'
+        message: `An account with this ${field} is already registered.`
       });
     }
 
@@ -57,6 +62,7 @@ export async function signup(req, res, next) {
     // Statically force role to 'citizen' (cannot register as admin)
     const user = await User.create({
       name: name.trim(),
+      username: cleanUsername,
       phone: phone.trim(),
       email: cleanEmail,
       password: hashedPassword,
@@ -66,6 +72,7 @@ export async function signup(req, res, next) {
     const token = signToken({
       id: user._id,
       name: user.name,
+      username: user.username,
       email: user.email,
       role: user.role
     });
@@ -77,6 +84,7 @@ export async function signup(req, res, next) {
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         phone: user.phone,
         email: user.email,
         role: user.role
@@ -89,26 +97,30 @@ export async function signup(req, res, next) {
 
 /**
  * Universal Sign In (Citizen & Authority)
+ * Accepts either Email or Username + Password
  * Returns token and user profile
  */
 export async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
+    const { email, username, identifier, password } = req.body;
+    const loginId = (email || username || identifier || '').toLowerCase().trim();
 
-    if (!email || !password) {
+    if (!loginId || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required.'
+        message: 'Email or Username and password are required.'
       });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: cleanEmail });
+    // Lookup user by either email or username
+    const user = await User.findOne({
+      $or: [{ email: loginId }, { username: loginId }]
+    });
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.'
+        message: 'Invalid email/username or password.'
       });
     }
 
@@ -116,13 +128,14 @@ export async function login(req, res, next) {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.'
+        message: 'Invalid email/username or password.'
       });
     }
 
     const token = signToken({
       id: user._id,
       name: user.name,
+      username: user.username,
       email: user.email,
       role: user.role
     });
@@ -134,6 +147,7 @@ export async function login(req, res, next) {
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         phone: user.phone,
         email: user.email,
         role: user.role
@@ -153,6 +167,7 @@ export async function getMe(req, res) {
     user: {
       id: req.user._id,
       name: req.user.name,
+      username: req.user.username,
       phone: req.user.phone,
       email: req.user.email,
       role: req.user.role

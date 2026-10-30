@@ -99,6 +99,9 @@ export function App() {
         onClose={() => setCitizenAuthOpen(false)}
         onSuccess={(u) => {
           setCurrentUser(u);
+          if (u.role === 'citizen') {
+            navigateTo('my-complaints');
+          }
         }}
       />
     </div>

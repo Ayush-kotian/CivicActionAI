@@ -9,6 +9,7 @@ import { ensureDemoAdmin } from '../src/utils/initAdmin.js';
 let adminToken = '';
 let citizenToken = '';
 let citizenUser = null;
+let createdComplaintId = '';
 
 beforeAll(async () => {
   await connectDB();
@@ -27,12 +28,15 @@ afterAll(async () => {
 
 describe('CivicActionAI Authentication & Authorization Suite', () => {
   it('should register a new citizen user with valid fields', async () => {
-    // Unique email for test run
-    const testEmail = `citizen_${Date.now()}@example.com`;
+    // Unique email and username for test run
+    const testSuffix = Date.now();
+    const testEmail = `citizen_${testSuffix}@example.com`;
+    const testUsername = `citizen_${testSuffix}`;
     const res = await request(app)
       .post('/api/auth/signup')
       .send({
         name: 'Aarav Sharma',
+        username: testUsername,
         phone: '9876500000',
         email: testEmail,
         password: 'secretpassword',
@@ -44,6 +48,7 @@ describe('CivicActionAI Authentication & Authorization Suite', () => {
     expect(res.body.token).toBeDefined();
     expect(res.body.user.role).toBe('citizen');
     expect(res.body.user.name).toBe('Aarav Sharma');
+    expect(res.body.user.username).toBe(testUsername);
 
     citizenToken = res.body.token;
     citizenUser = res.body.user;
@@ -54,6 +59,7 @@ describe('CivicActionAI Authentication & Authorization Suite', () => {
       .post('/api/auth/signup')
       .send({
         name: 'Short Pass',
+        username: `short_${Date.now()}`,
         phone: '9876500001',
         email: `short_${Date.now()}@example.com`,
         password: '123',
@@ -70,6 +76,7 @@ describe('CivicActionAI Authentication & Authorization Suite', () => {
       .post('/api/auth/signup')
       .send({
         name: 'Mismatch',
+        username: `mismatch_${Date.now()}`,
         phone: '9876500002',
         email: `mismatch_${Date.now()}@example.com`,
         password: 'password123',
@@ -86,6 +93,7 @@ describe('CivicActionAI Authentication & Authorization Suite', () => {
       .post('/api/auth/signup')
       .send({
         name: 'Fake Admin',
+        username: `fake_admin_${Date.now()}`,
         phone: '9876500003',
         email: 'rajesh@gmail.com',
         password: 'password123',
@@ -236,6 +244,7 @@ describe('CivicActionAI REST API & Authorization Enforcement Suite', () => {
   it('POST /api/reports should detect duplicate and allow admin to review status', async () => {
     const res = await request(app)
       .post('/api/reports')
+      .set('Authorization', `Bearer ${citizenToken}`)
       .field('description', 'Severe waterlogging at Ring Road near metro station blocking traffic.')
       .field('category', 'Waterlogging')
       .field('latitude', '12.9717')

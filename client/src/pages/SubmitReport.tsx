@@ -16,11 +16,12 @@ import {
 import { LocationPicker } from '../components/LocationPicker';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { DuplicateAlert } from '../components/DuplicateAlert';
-import { submitReport } from '../services/api';
+import { submitReport, getStoredUser } from '../services/api';
 import { Report, CivicCategory } from '../types';
 
 interface SubmitReportProps {
   onNavigate: (view: string, param?: string) => void;
+  onOpenAuth?: () => void;
 }
 
 const CATEGORY_OPTIONS: (CivicCategory | 'Auto Detect')[] = [
@@ -36,7 +37,9 @@ const CATEGORY_OPTIONS: (CivicCategory | 'Auto Detect')[] = [
   'Other'
 ];
 
-export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
+export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate, onOpenAuth }) => {
+  const user = getStoredUser();
+
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string>('Auto Detect');
   const [latitude, setLatitude] = useState(12.9716);
@@ -49,6 +52,27 @@ export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [submittedReport, setSubmittedReport] = useState<Report | null>(null);
   const [copied, setCopied] = useState(false);
+
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-4 animate-fade-in">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
+          <ShieldAlert className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-extrabold text-slate-900">Citizen Sign In Required</h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
+          You must sign in to submit a complaint so municipal authorities can identify your filing, prevent spam, and update you on progress.
+        </p>
+        <button
+          type="button"
+          onClick={onOpenAuth}
+          className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
+        >
+          Sign In / Create Account
+        </button>
+      </div>
+    );
+  }
 
   // Quick pre-fill buttons for test scenarios
   const handlePreFill = (text: string, cat: string, lat: number, lon: number, addr: string) => {
@@ -463,14 +487,23 @@ export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
                 Submit Another Report
               </button>
 
-              <button
-                type="button"
-                onClick={() => onNavigate('track', submittedReport.complaintId)}
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5"
-              >
-                <span>Track Complaint Progress</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onNavigate('my-complaints')}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition"
+                >
+                  View in My Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('track', submittedReport.complaintId)}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5"
+                >
+                  <span>Track Complaint Progress</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

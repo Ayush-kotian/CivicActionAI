@@ -14,8 +14,8 @@ import { requireAuth, requireAdmin, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Citizen report creation (with optional image and optional citizen auth)
-router.post('/', uploadMiddleware.single('image'), optionalAuth, createReport);
+// Citizen report creation (strictly requires citizen login)
+router.post('/', uploadMiddleware.single('image'), requireAuth, createReport);
 
 // Citizen: view own complaints
 router.get('/my-reports', requireAuth, getMyReports);
