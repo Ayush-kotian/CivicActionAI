@@ -1,0 +1,24 @@
+{
+  "name": "civicactionai",
+  "version": "1.0.0",
+  "description": "CivicActionAI - From Complaints to Action. AI-Powered Civic Issue Intelligence & Municipal Operations Platform",
+  "main": "server/src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/src/server.js",
+    "seed": "npm run seed --prefix server",
+    "test": "npm test --prefix server",
+    "build": "npm run build --prefix client",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client"
+  },
+  "keywords": [
+    "civic-tech",
+    "ai",
+    "municipal",
+    "actionable-intelligence",
+    "complaints-to-action"
+  ],
+  "author": "Ayush-Kotian",
+  "license": "MIT"
+}
