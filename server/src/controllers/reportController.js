@@ -88,7 +88,7 @@ export async function createReport(req, res, next) {
         status: 'SUBMITTED',
         changedBy: 'Duplicate Engine',
         timestamp: new Date(Date.now() + 1500),
-        note: `Potential duplicate flag triggered. Related report: #${duplicateCheck.duplicateReportIds[0]} with similarity ${duplicateCheck.duplicateScore}%.`
+        note: `Potential duplicate flag triggered. Related report: #${duplicateCheck.duplicateOf || duplicateCheck.duplicateReportIds[0]} with similarity ${duplicateCheck.duplicateScore}% (${duplicateCheck.duplicateTier}).`
       });
     }
 
@@ -108,9 +108,14 @@ export async function createReport(req, res, next) {
       impactLevel: aiResult.impactLevel,
       keywords: aiResult.keywords,
       duplicatePossible: duplicateCheck.duplicatePossible,
+      duplicateStatus: duplicateCheck.duplicateStatus,
+      duplicateTier: duplicateCheck.duplicateTier,
+      duplicateOf: duplicateCheck.duplicateOf,
       duplicateReportIds: duplicateCheck.duplicateReportIds,
       duplicateScore: duplicateCheck.duplicateScore,
       duplicateExplanation: duplicateCheck.duplicateExplanation,
+      duplicateReason: duplicateCheck.duplicateReason,
+      duplicateReasons: duplicateCheck.duplicateReasons,
       actionBrief: aiResult.actionBrief,
       status: 'SUBMITTED',
       assignedDepartment: recommendedDept,
@@ -235,7 +240,7 @@ export async function getReportById(req, res, next) {
     if (report.duplicateReportIds && report.duplicateReportIds.length > 0) {
       relatedDuplicates = await Report.find(
         { complaintId: { $in: report.duplicateReportIds } },
-        'complaintId description category priority status location createdAt'
+        'complaintId description category priority status location duplicateStatus duplicateTier duplicateScore duplicateReason duplicateReasons createdAt'
       ).lean();
     }
 
@@ -245,6 +250,62 @@ export async function getReportById(req, res, next) {
         ...report,
         relatedDuplicates
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateDuplicateStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { status, note, changedBy = 'Authority Operations' } = req.body;
+
+    const lowerStatus = (status || '').toLowerCase();
+    if (!['confirmed', 'rejected', 'possible', 'none'].includes(lowerStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid duplicate status. Must be confirmed, rejected, possible, or none.'
+      });
+    }
+
+    const report = await Report.findOne({
+      $or: [{ complaintId: id }, ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])]
+    });
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: `Report #${id} not found.`
+      });
+    }
+
+    report.duplicateStatus = lowerStatus;
+    if (lowerStatus === 'rejected') {
+      report.duplicatePossible = false;
+      report.duplicateTier = 'None';
+    } else if (lowerStatus === 'confirmed') {
+      report.duplicatePossible = true;
+      report.duplicateTier = 'Strong Duplicate';
+    }
+
+    report.statusHistory.push({
+      status: report.status,
+      changedBy,
+      timestamp: new Date(),
+      note: note
+        ? note.trim()
+        : (lowerStatus === 'confirmed'
+            ? `Authority verified and confirmed report as duplicate of #${report.duplicateOf || 'related complaint'}.`
+            : `Authority reviewed and cleared duplicate flag (marked as distinct complaint).`)
+    });
+
+    const updated = await report.save();
+
+    res.json({
+      success: true,
+      message: `Duplicate status updated to ${lowerStatus}.`,
+      data: updated
     });
   } catch (error) {
     next(error);
@@ -353,7 +414,7 @@ export async function getCitizenTracking(req, res, next) {
   try {
     const { complaintId } = req.params;
     const report = await Report.findOne({ complaintId: complaintId.trim().toUpperCase() })
-      .select('complaintId category summary priority status assignedDepartment location statusHistory createdAt updatedAt imageUrl')
+      .select('complaintId category summary priority status assignedDepartment location statusHistory createdAt updatedAt imageUrl duplicatePossible duplicateStatus duplicateTier duplicateOf duplicateScore duplicateReason duplicateReasons')
       .lean();
 
     if (!report) {

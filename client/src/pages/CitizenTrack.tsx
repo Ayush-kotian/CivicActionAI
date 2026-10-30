@@ -14,6 +14,7 @@ import {
 import { StatusTimeline } from '../components/StatusTimeline';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { StatusBadge } from '../components/StatusBadge';
+import { DuplicateAlert } from '../components/DuplicateAlert';
 import { fetchTracking } from '../services/api';
 import { Report } from '../types';
 
@@ -150,6 +151,25 @@ export const CitizenTrack: React.FC<CitizenTrackProps> = ({
               <StatusBadge status={report.status} />
             </div>
           </div>
+
+          {/* Duplicate Detection Notification if linked */}
+          {report.duplicatePossible && (
+            <DuplicateAlert
+              duplicateScore={report.duplicateScore}
+              duplicateReportIds={report.duplicateReportIds}
+              duplicateExplanation={report.duplicateExplanation}
+              duplicateStatus={report.duplicateStatus}
+              duplicateTier={report.duplicateTier}
+              duplicateOf={report.duplicateOf}
+              duplicateReason={report.duplicateReason}
+              duplicateReasons={report.duplicateReasons}
+              isCitizenView={true}
+              onViewReport={(id) => {
+                setSearchId(id);
+                performLookup(id);
+              }}
+            />
+          )}
 
           {/* Stepper Timeline */}
           <StatusTimeline

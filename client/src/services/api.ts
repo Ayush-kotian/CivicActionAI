@@ -93,6 +93,23 @@ export async function assignReport(
   return json;
 }
 
+export async function updateDuplicateStatus(
+  id: string,
+  status: 'confirmed' | 'rejected' | 'possible' | 'none',
+  note?: string
+): Promise<{ success: boolean; data: Report }> {
+  const response = await fetch(`${BASE_URL}/reports/${encodeURIComponent(id)}/duplicate-status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, note })
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || 'Failed to update duplicate status');
+  }
+  return json;
+}
+
 export async function fetchTracking(complaintId: string): Promise<{ success: boolean; data: Report }> {
   const cleanId = complaintId.trim().toUpperCase();
   const response = await fetch(`${BASE_URL}/reports/tracking/${encodeURIComponent(cleanId)}`);

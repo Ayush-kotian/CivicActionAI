@@ -40,6 +40,9 @@ export interface StatusHistoryItem {
   note: string;
 }
 
+export type DuplicateStatus = 'none' | 'possible' | 'confirmed' | 'rejected';
+export type DuplicateTier = 'Strong Duplicate' | 'Possible Duplicate' | 'None';
+
 export interface Report {
   _id: string;
   complaintId: string;
@@ -57,9 +60,14 @@ export interface Report {
   impactLevel: PriorityLevel;
   keywords: string[];
   duplicatePossible: boolean;
+  duplicateStatus?: DuplicateStatus;
+  duplicateTier?: DuplicateTier;
+  duplicateOf?: string | null;
   duplicateReportIds: string[];
   duplicateScore: number;
   duplicateExplanation: string;
+  duplicateReason?: string;
+  duplicateReasons?: string[];
   actionBrief: string;
   status: ReportStatus;
   assignedDepartment: Department;

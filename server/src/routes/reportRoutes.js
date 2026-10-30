@@ -5,7 +5,8 @@ import {
   getReportById,
   updateReportStatus,
   assignReport,
-  getCitizenTracking
+  getCitizenTracking,
+  updateDuplicateStatus
 } from '../controllers/reportController.js';
 import { uploadMiddleware } from '../middleware/upload.js';
 
@@ -28,5 +29,8 @@ router.patch('/:id/status', updateReportStatus);
 
 // Assign department & work lead
 router.patch('/:id/assign', assignReport);
+
+// Update duplicate review status (confirm or reject duplicate)
+router.patch('/:id/duplicate-status', updateDuplicateStatus);
 
 export default router;

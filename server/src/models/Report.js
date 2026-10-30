@@ -22,6 +22,13 @@ export const VALID_STATUSES = [
   'RESOLVED'
 ];
 
+export const VALID_DUPLICATE_STATUSES = [
+  'none',
+  'possible',
+  'confirmed',
+  'rejected'
+];
+
 export const VALID_DEPARTMENTS = [
   'Road Maintenance',
   'Waste Management',
@@ -135,6 +142,22 @@ const ReportSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  duplicateStatus: {
+    type: String,
+    enum: VALID_DUPLICATE_STATUSES,
+    default: 'none',
+    index: true
+  },
+  duplicateTier: {
+    type: String,
+    enum: ['Strong Duplicate', 'Possible Duplicate', 'None'],
+    default: 'None'
+  },
+  duplicateOf: {
+    type: String,
+    default: null,
+    index: true
+  },
   duplicateReportIds: {
     type: [String],
     default: []
@@ -146,6 +169,14 @@ const ReportSchema = new mongoose.Schema({
   duplicateExplanation: {
     type: String,
     default: ''
+  },
+  duplicateReason: {
+    type: String,
+    default: ''
+  },
+  duplicateReasons: {
+    type: [String],
+    default: []
   },
   actionBrief: {
     type: String,

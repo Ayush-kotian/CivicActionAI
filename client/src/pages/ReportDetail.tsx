@@ -14,7 +14,7 @@ import {
   ExternalLink,
   Loader2
 } from 'lucide-react';
-import { fetchReportById, updateReportStatus, assignReport } from '../services/api';
+import { fetchReportById, updateReportStatus, assignReport, updateDuplicateStatus } from '../services/api';
 import { Report, ReportStatus, Department } from '../types';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { StatusBadge } from '../components/StatusBadge';
@@ -387,8 +387,21 @@ export const ReportDetail: React.FC<ReportDetailProps> = ({ complaintId, onNavig
             duplicateScore={report.duplicateScore}
             duplicateReportIds={report.duplicateReportIds}
             duplicateExplanation={report.duplicateExplanation}
+            duplicateStatus={report.duplicateStatus}
+            duplicateTier={report.duplicateTier}
+            duplicateOf={report.duplicateOf}
+            duplicateReason={report.duplicateReason}
+            duplicateReasons={report.duplicateReasons}
             relatedDuplicates={report.relatedDuplicates}
             onViewReport={(id) => onNavigate('report-detail', id)}
+            onStatusUpdate={async (newStatus) => {
+              const res = await updateDuplicateStatus(report.complaintId, newStatus);
+              if (res.success && res.data) {
+                setReport(res.data);
+                setSuccessMessage(`Duplicate review saved: Marked as ${newStatus}.`);
+                setTimeout(() => setSuccessMessage(''), 4000);
+              }
+            }}
           />
         )}
 

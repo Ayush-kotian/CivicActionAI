@@ -411,9 +411,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
                             {report.summary || report.description}
                           </p>
                           {report.duplicatePossible && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200 mt-1">
-                              <Layers className="w-2.5 h-2.5" /> Duplicate ({report.duplicateScore}%)
-                            </span>
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              {report.duplicateStatus === 'confirmed' ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-800 bg-purple-100 px-1.5 py-0.5 rounded border border-purple-300">
+                                  <Layers className="w-2.5 h-2.5" /> Confirmed Duplicate (#{report.duplicateOf || report.duplicateReportIds?.[0]})
+                                </span>
+                              ) : report.duplicateStatus === 'rejected' ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                  Distinct Issue (Reviewed)
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                                  (report.duplicateTier === 'Strong Duplicate' || report.duplicateScore >= 80)
+                                    ? 'text-amber-800 bg-amber-50 border-amber-300'
+                                    : 'text-purple-700 bg-purple-50 border-purple-200'
+                                }`}>
+                                  <Layers className="w-2.5 h-2.5" />
+                                  {report.duplicateTier || (report.duplicateScore >= 80 ? 'Likely Duplicate' : 'Possible Duplicate')} ({report.duplicateScore}%)
+                                </span>
+                              )}
+                            </div>
                           )}
                         </td>
 

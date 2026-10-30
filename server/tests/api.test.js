@@ -133,4 +133,47 @@ describe('CivicActionAI REST API Integration Suite', () => {
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data)).toBe(true);
   });
+
+  it('POST /api/reports should detect duplicate, link it, and never delete either report', async () => {
+    // Submit a near-identical report right next to the earlier waterlogging report
+    const res = await request(app)
+      .post('/api/reports')
+      .field('description', 'Severe waterlogging at Ring Road near metro station blocking traffic.')
+      .field('category', 'Waterlogging')
+      .field('latitude', '12.9717')
+      .field('longitude', '77.5947')
+      .field('address', 'Ring Road Metro');
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    const newComplaintId = res.body.data.complaintId;
+
+    // Must be flagged as duplicate
+    expect(res.body.data.duplicatePossible).toBe(true);
+    expect(res.body.data.duplicateReportIds).toContain(createdComplaintId);
+    expect(res.body.data.duplicateScore).toBeGreaterThanOrEqual(60);
+    expect(res.body.data.duplicateOf).toBe(res.body.data.duplicateReportIds[0]);
+    expect(res.body.data.duplicateStatus).toBe('possible');
+    expect(Array.isArray(res.body.data.duplicateReasons)).toBe(true);
+
+    // Verify NEITHER report was deleted from the database
+    const origCheck = await Report.findOne({ complaintId: createdComplaintId });
+    const newCheck = await Report.findOne({ complaintId: newComplaintId });
+    expect(origCheck).not.toBeNull();
+    expect(newCheck).not.toBeNull();
+
+    // Test authority review: confirm duplicate
+    const confirmRes = await request(app)
+      .patch(`/api/reports/${newComplaintId}/duplicate-status`)
+      .send({ status: 'confirmed', note: 'Confirmed duplicate by municipal supervisor.' });
+    expect(confirmRes.status).toBe(200);
+    expect(confirmRes.body.data.duplicateStatus).toBe('confirmed');
+
+    // Test authority review: reject duplicate (mark as distinct issue)
+    const rejectRes = await request(app)
+      .patch(`/api/reports/${newComplaintId}/duplicate-status`)
+      .send({ status: 'rejected', note: 'Distinct issue on opposite side of station.' });
+    expect(rejectRes.status).toBe(200);
+    expect(rejectRes.body.data.duplicateStatus).toBe('rejected');
+  });
 });

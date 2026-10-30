@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { LocationPicker } from '../components/LocationPicker';
 import { PriorityBadge } from '../components/PriorityBadge';
+import { DuplicateAlert } from '../components/DuplicateAlert';
 import { submitReport } from '../services/api';
 import { Report, CivicCategory } from '../types';
 
@@ -142,6 +143,36 @@ export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
             type="button"
             onClick={() =>
               handlePreFill(
+                'Large pothole near the main road causing problems for vehicles.',
+                'Road Damage',
+                12.9716,
+                77.5946,
+                'Main Road / Commercial Cross'
+              )
+            }
+            className="px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-400 rounded-md text-blue-900 font-bold transition shadow-2xs"
+          >
+            📋 Demo A: Pothole on Main Road
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              handlePreFill(
+                'There is a large pothole on the main road making it dangerous for vehicles.',
+                'Road Damage',
+                12.9718,
+                77.5948,
+                'Main Road / Commercial Cross'
+              )
+            }
+            className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-400 rounded-md text-amber-950 font-bold transition shadow-2xs"
+          >
+            ⚡ Demo B: Submit Duplicate of A
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              handlePreFill(
                 'Severe waterlogging near the main road after yesterday rain. Vehicles are struggling to pass and water has entered nearby storefronts.',
                 'Waterlogging',
                 12.9718,
@@ -149,9 +180,9 @@ export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
                 'Main Road / Commercial Cross'
               )
             }
-            className="px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-300 rounded-md text-blue-900 font-medium transition shadow-2xs"
+            className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded-md text-slate-800 font-medium transition shadow-2xs"
           >
-            🌊 Waterlogging (Main Road)
+            🌊 Waterlogging Cluster
           </button>
           <button
             type="button"
@@ -164,24 +195,9 @@ export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
                 'St. Jude School Road Gate 3'
               )
             }
-            className="px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-300 rounded-md text-blue-900 font-medium transition shadow-2xs"
+            className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded-md text-slate-800 font-medium transition shadow-2xs"
           >
-            ⚠️ Open Manhole (School Safety)
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              handlePreFill(
-                'Large pothole near college gate on North Avenue, bikes and scooters are slipping and falling during peak hours.',
-                'Road Damage',
-                12.9852,
-                77.6052,
-                'North Avenue College Gate 1'
-              )
-            }
-            className="px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-300 rounded-md text-blue-900 font-medium transition shadow-2xs"
-          >
-            🕳️ Duplicate Pothole (College)
+            ⚠️ Open Manhole (Safety)
           </button>
         </div>
       </div>
@@ -417,13 +433,18 @@ export const SubmitReport: React.FC<SubmitReportProps> = ({ onNavigate }) => {
 
               {/* Duplicate check alert if duplicate flagged */}
               {submittedReport.duplicatePossible && (
-                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
-                  <Layers className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Correlated Duplicate Reports Detected:</span>
-                    <p className="mt-0.5">{submittedReport.duplicateExplanation}</p>
-                  </div>
-                </div>
+                <DuplicateAlert
+                  duplicateScore={submittedReport.duplicateScore}
+                  duplicateReportIds={submittedReport.duplicateReportIds}
+                  duplicateExplanation={submittedReport.duplicateExplanation}
+                  duplicateStatus={submittedReport.duplicateStatus}
+                  duplicateTier={submittedReport.duplicateTier}
+                  duplicateOf={submittedReport.duplicateOf}
+                  duplicateReason={submittedReport.duplicateReason}
+                  duplicateReasons={submittedReport.duplicateReasons}
+                  isCitizenView={true}
+                  onViewReport={(id) => onNavigate('track', id)}
+                />
               )}
             </div>
 

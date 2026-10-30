@@ -119,20 +119,38 @@ If `GEMINI_API_KEY` is not provided, network fails, or validation errors occur, 
 - Vulnerability weighting for schools, hospitals, and transit hubs.
 - Mathematical priority scoring mapped to `CRITICAL` (&ge; 80), `HIGH` (60–79), `MEDIUM` (35–59), `LOW` (&lt; 35).
 
-### C. Hybrid Duplicate Detection Formula
-```
-duplicateScore = (textSimilarity * 0.50) + (geoProximityScore * 0.35) + (categorySimilarity * 0.15)
-```
-- **Text Similarity**: Tokenized Jaccard similarity combined with bigram overlap and civic synonym normalization (`pothole`/`crater`, `flood`/`waterlog`, `waste`/`garbage`).
-- **Geo-Proximity Score**: Evaluated via Haversine spherical distance ($d \le 100\text{m} \to 1.0$, $d \le 300\text{m} \to 0.85$, $d \le 600\text{m} \to 0.70$, $d \le 1\text{km} \to 0.45$).
-- **Category Similarity**: 1.0 for exact matches, 0.6 for correlated domains (e.g. Drainage & Waterlogging).
-- Threshold: Scores &ge; 60% trigger a duplicate flag, linking the reports bidirectionally without deleting either.
+### C. Hybrid Duplicate Detection Engine & Non-Deletion Policy
 
-### D. Geospatial Hotspot Engine
-- Clusters reports within a 600-meter radius using the Haversine formula.
-- Requires at least 3 correlated reports to qualify as an active hotspot.
-- Computes aggregate risk: `CRITICAL` if any critical safety hazard is present or report volume &ge; 8; `HIGH` if high-priority count &ge; 2.
-- Generates an automated 1-minute Action Brief (Issue, Impact, Evidence, Recommended Action, Decision Rationale).
+CivicActionAI implements an explainable, tiered duplicate detection system operating automatically during complaint submission:
+
+#### 1. Scoring Formulas
+- **With Coordinates**:
+  ```
+  duplicateScore = (textSimilarity * 0.50) + (geoProximityScore * 0.35) + (categorySimilarity * 0.15)
+  ```
+- **Without Coordinates (Graceful Fallback)**:
+  ```
+  duplicateScore = (textSimilarity * 0.75) + (categorySimilarity * 0.25)
+  ```
+
+#### 2. Tiered Thresholds
+- **80% – 100% &bull; Strong / Likely Duplicate**: High contextual similarity in description, identical category, and immediate geographic proximity ($\le 200\text{m}$).
+- **60% – 79% &bull; Possible Duplicate**: Moderate text overlap or neighborhood cluster proximity ($\le 600\text{m}$).
+- **Below 60% &bull; Probably Not Duplicate**: Treated as independent municipal complaints.
+
+#### 3. Strict Non-Deletion Policy
+Duplicate complaints are **NEVER deleted**. A civic report represents genuine citizen effort and corroborating evidence:
+- Both complaints are retained in the database.
+- The new complaint is linked to the primary complaint (`duplicateOf: CAI-XXXX`).
+- Both citizen evidence submissions and photos remain accessible.
+- Public tracking displays the linked complaint while confirming that the citizen's filing is preserved.
+- Municipal authorities can review the relationship on the Authority Desk and toggle **Confirm Duplicate** or **Mark as Distinct Issue**.
+
+#### 4. Explainable Reasons Checklist
+Every duplicate match generates plain-language, audit-ready bullet points:
+- *High textual and semantic similarity (83%) in issue description*
+- *Identical civic category: Road Damage*
+- *Located in immediate proximity (approx. 31m away)*
 
 ---
 
@@ -235,22 +253,33 @@ npm test
 ```
 
 Test Results:
-- `hotspot.test.js` &bull; 1 passed
-- `duplicate.test.js` &bull; 3 passed
-- `aiFallback.test.js` &bull; 4 passed
-- `api.test.js` &bull; 10 passed (HTTP creation, validation, assignment, status flow, stats)
-- **Total: 18 passed**
+- `hotspot.test.js` &bull; 1 passed (Geospatial clustering & Action Brief synthesis)
+- `duplicate.test.js` &bull; 6 passed (Strong/likely tiers, distant non-duplicates, coordinate fallback, explainable checklist reasons)
+- `aiFallback.test.js` &bull; 4 passed (Deterministic civic rules, hazard keywords, priority weights)
+- `api.test.js` &bull; 11 passed (HTTP intake, AI analysis, duplicate linking, non-deletion verification, authority review, workflow transitions, tracking)
+- **Total: 22 passed (100%)**
 
 ---
 
-## 12. 5-Minute Evaluator Demo Journey
+## 12. Evaluator Demo Journey
 
-1. **Step 1 — Submit Report**: Open the `/report` page. Click the quick pre-fill button: `🌊 Waterlogging (Main Road)` or `⚠️ Open Manhole (School Safety)`. Drag the map pin to adjust coordinates and click **Submit & Analyze Report**.
-2. **Step 2 — Inspect AI Understanding**: An instant modal reveals the AI Category, operational summary, explainable priority score, public safety risk flag, and duplicate warning. Copy the generated Complaint ID (e.g. `CAI-1082`).
+### 30-Second Duplicate Detection Demo (Judges' Quick Test)
+1. Navigate to **Report an Issue** (`/report`).
+2. Click the yellow button: **Demo A: Pothole (Original)** and click **Submit & Analyze Report**. Copy the generated Complaint ID (e.g. `CAI-1082`).
+3. Now click the yellow button: **Demo B: Duplicate of A (Same Pothole)** and click **Submit & Analyze Report**.
+4. Observe the instant **Likely Duplicate (80–100%)** alert:
+   - Identifies Complaint A as the existing primary issue.
+   - Highlights explainable reasons (*Text similarity*, *Identical category*, *Immediate proximity*).
+   - Reassures the citizen with: *"Your report was NOT deleted — preserved as corroborating evidence."*
+5. Click **Authority Desk** (`/admin`), filter by **Duplicates Only**, inspect Complaint B, and click **Confirm Duplicate** or **Mark as Distinct Issue**.
+
+### Full 5-Minute End-to-End Walkthrough
+1. **Step 1 — Submit Report**: Open the `/report` page. Click a quick pre-fill button: `🌊 Waterlogging (Main Road)` or `⚠️ Open Manhole (School Safety)`. Drag the map pin to adjust coordinates and click **Submit & Analyze Report**.
+2. **Step 2 — Inspect AI Understanding**: An instant modal reveals the AI Category, operational summary, explainable priority score, public safety risk flag, and duplicate warning. Copy the generated Complaint ID.
 3. **Step 3 — Reveal Hotspots**: Click **Hotspots** in the navbar. Observe the active cluster on Main Road (8+ reports). Click **View 1-Minute Action Brief** to review the synthesized municipal directive.
 4. **Step 4 — Authority Assignment**: Open the **Authority Desk** (`/admin`). Filter by `Waterlogging` or search by ID. Click **Inspect** to view full AI reasoning. In the assignment panel, select `Drainage` and click **Confirm Department Delegation**.
 5. **Step 5 — Advance Workflow**: Click **Deploy & In Progress**, enter a progress note (*"Pumping crew on site"*), then click **Mark Resolved** (*"Water cleared"*).
-6. **Step 6 — Citizen Tracking**: Go to **Track Status** (`/track`), paste your Complaint ID, and observe the live visual timeline advancing to **Resolved** with complete audit notes.
+6. **Step 6 — Citizen Tracking**: Go to **Track Status** (`/track`), paste your Complaint ID, and observe the live visual timeline advancing to **Resolved** with complete audit notes and duplicate linkage information.
 
 ---
 
