@@ -6,31 +6,36 @@ import {
   updateReportStatus,
   assignReport,
   getCitizenTracking,
-  updateDuplicateStatus
+  updateDuplicateStatus,
+  getMyReports
 } from '../controllers/reportController.js';
 import { uploadMiddleware } from '../middleware/upload.js';
+import { requireAuth, requireAdmin, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Citizen report creation (with optional image)
-router.post('/', uploadMiddleware.single('image'), createReport);
+// Citizen report creation (with optional image and optional citizen auth)
+router.post('/', uploadMiddleware.single('image'), optionalAuth, createReport);
 
-// Query reports with search & filtering
-router.get('/', getReports);
+// Citizen: view own complaints
+router.get('/my-reports', requireAuth, getMyReports);
 
 // Citizen public tracking lookup by complaintId
 router.get('/tracking/:complaintId', getCitizenTracking);
 
-// Detailed report lookup by ID or complaintId
-router.get('/:id', getReportById);
+// Query reports with search & filtering (Authority / Admin only)
+router.get('/', requireAuth, requireAdmin, getReports);
 
-// Update complaint status lifecycle
-router.patch('/:id/status', updateReportStatus);
+// Detailed report lookup by ID or complaintId (Protected)
+router.get('/:id', requireAuth, getReportById);
 
-// Assign department & work lead
-router.patch('/:id/assign', assignReport);
+// Update complaint status lifecycle (Authority / Admin only)
+router.patch('/:id/status', requireAuth, requireAdmin, updateReportStatus);
 
-// Update duplicate review status (confirm or reject duplicate)
-router.patch('/:id/duplicate-status', updateDuplicateStatus);
+// Assign department & work lead (Authority / Admin only)
+router.patch('/:id/assign', requireAuth, requireAdmin, assignReport);
+
+// Update duplicate review status (Authority / Admin only)
+router.patch('/:id/duplicate-status', requireAuth, requireAdmin, updateDuplicateStatus);
 
 export default router;

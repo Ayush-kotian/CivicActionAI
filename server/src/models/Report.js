@@ -205,6 +205,25 @@ const ReportSchema = new mongoose.Schema({
   source: {
     type: String,
     default: 'CITIZEN_WEB'
+  },
+  citizenId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+    index: true
+  },
+  citizenName: {
+    type: String,
+    default: ''
+  },
+  citizenEmail: {
+    type: String,
+    default: '',
+    index: true
+  },
+  citizenPhone: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true

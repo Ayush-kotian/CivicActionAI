@@ -119,7 +119,11 @@ export async function createReport(req, res, next) {
       actionBrief: aiResult.actionBrief,
       status: 'SUBMITTED',
       assignedDepartment: recommendedDept,
-      statusHistory
+      statusHistory,
+      citizenId: req.user?._id || null,
+      citizenName: req.user?.name || req.body.citizenName || '',
+      citizenEmail: req.user?.email || req.body.citizenEmail || '',
+      citizenPhone: req.user?.phone || req.body.citizenPhone || ''
     });
 
     const saved = await newReport.save();
@@ -432,3 +436,34 @@ export async function getCitizenTracking(req, res, next) {
     next(error);
   }
 }
+
+export async function getMyReports(req, res, next) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required to view your complaints.'
+      });
+    }
+
+    const query = {
+      $or: [
+        { citizenId: req.user._id },
+        { citizenEmail: req.user.email.toLowerCase() }
+      ]
+    };
+
+    const reports = await Report.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      data: reports,
+      total: reports.length
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

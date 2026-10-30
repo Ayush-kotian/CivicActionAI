@@ -7,10 +7,18 @@ import { CitizenTrack } from './pages/CitizenTrack';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { ReportDetail } from './pages/ReportDetail';
 import { HotspotsPage } from './pages/HotspotsPage';
+import { MyComplaints } from './pages/MyComplaints';
+import { CitizenAuthModal } from './components/CitizenAuthModal';
+import { getStoredUser, removeAuthToken } from './services/api';
+import type { User } from './types';
 
 export function App() {
   const [currentView, setCurrentView] = useState<string>('home');
   const [viewParam, setViewParam] = useState<string>('');
+
+  // Authentication state
+  const [currentUser, setCurrentUser] = useState<User | null>(getStoredUser());
+  const [citizenAuthOpen, setCitizenAuthOpen] = useState(false);
 
   // Synchronize with URL hash on initial mount and popstate
   useEffect(() => {
@@ -36,9 +44,27 @@ export function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleSignOut = () => {
+    removeAuthToken();
+    setCurrentUser(null);
+    if (currentView === 'my-complaints' || currentView === 'admin') {
+      navigateTo('home');
+    }
+  };
+
+  const handleAdminLogin = (adminUser: User) => {
+    setCurrentUser(adminUser);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900">
-      <Navbar currentView={currentView} onNavigate={navigateTo} />
+      <Navbar
+        currentView={currentView}
+        onNavigate={navigateTo}
+        currentUser={currentUser}
+        onOpenCitizenAuth={() => setCitizenAuthOpen(true)}
+        onSignOut={handleSignOut}
+      />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
         {currentView === 'home' && <LandingPage onNavigate={navigateTo} />}
@@ -46,7 +72,19 @@ export function App() {
         {currentView === 'track' && (
           <CitizenTrack initialComplaintId={viewParam} onNavigate={navigateTo} />
         )}
-        {currentView === 'admin' && <AdminDashboard onNavigate={navigateTo} />}
+        {currentView === 'my-complaints' && (
+          <MyComplaints
+            onNavigate={navigateTo}
+            onOpenAuth={() => setCitizenAuthOpen(true)}
+          />
+        )}
+        {currentView === 'admin' && (
+          <AdminDashboard
+            onNavigate={navigateTo}
+            currentUser={currentUser}
+            onAdminLogin={handleAdminLogin}
+          />
+        )}
         {currentView === 'report-detail' && (
           <ReportDetail complaintId={viewParam} onNavigate={navigateTo} />
         )}
@@ -54,6 +92,15 @@ export function App() {
       </main>
 
       <Footer />
+
+      {/* Citizen Sign In / Sign Up Modal */}
+      <CitizenAuthModal
+        isOpen={citizenAuthOpen}
+        onClose={() => setCitizenAuthOpen(false)}
+        onSuccess={(u) => {
+          setCurrentUser(u);
+        }}
+      />
     </div>
   );
 }

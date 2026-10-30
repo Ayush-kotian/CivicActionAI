@@ -7,21 +7,39 @@ import {
   Flame,
   Menu,
   X,
-  Sparkles
+  Sparkles,
+  FileText,
+  User as UserIcon,
+  ShieldCheck,
+  LogOut,
+  LogIn
 } from 'lucide-react';
+import type { User } from '../types';
 
 interface NavbarProps {
   currentView: string;
   onNavigate: (view: string, param?: string) => void;
+  currentUser: User | null;
+  onOpenCitizenAuth: () => void;
+  onSignOut: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  currentView,
+  onNavigate,
+  currentUser,
+  onOpenCitizenAuth,
+  onSignOut
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { key: 'home', label: 'Home', icon: Building2 },
     { key: 'report', label: 'Report Issue', icon: FilePlus2, highlight: true },
     { key: 'track', label: 'Track Status', icon: Search },
+    ...(currentUser?.role === 'citizen'
+      ? [{ key: 'my-complaints', label: 'My Complaints', icon: FileText }]
+      : []),
     { key: 'admin', label: 'Authority Desk', icon: LayoutDashboard },
     { key: 'hotspots', label: 'Hotspots', icon: Flame }
   ];
@@ -60,43 +78,96 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1.5" aria-label="Main Navigation">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = currentView === link.key;
-              if (link.highlight) {
+          <div className="hidden md:flex items-center gap-2">
+            <nav className="flex items-center gap-1" aria-label="Main Navigation">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = currentView === link.key;
+                if (link.highlight) {
+                  return (
+                    <button
+                      key={link.key}
+                      type="button"
+                      onClick={() => handleLinkClick(link.key)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition hover:shadow mr-1"
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{link.label}</span>
+                    </button>
+                  );
+                }
                 return (
                   <button
                     key={link.key}
                     type="button"
                     onClick={() => handleLinkClick(link.key)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition ml-2 hover:shadow"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      isActive
+                        ? 'bg-slate-100 text-blue-700 border border-slate-300/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-3.5 h-3.5" />
                     <span>{link.label}</span>
                   </button>
                 );
-              }
-              return (
+              })}
+            </nav>
+
+            {/* User Session status / Login button */}
+            <div className="pl-2 border-l border-slate-200 flex items-center gap-2">
+              {currentUser ? (
+                <div className="flex items-center gap-2">
+                  {currentUser.role === 'admin' ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-lg text-xs font-bold">
+                      <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Authority: {currentUser.name}</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleLinkClick('my-complaints')}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 rounded-lg text-xs font-semibold transition"
+                      title="View My Complaints"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 text-blue-600" />
+                      <span>{currentUser.name}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onSignOut}
+                    className="p-1.5 text-slate-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
                 <button
-                  key={link.key}
                   type="button"
-                  onClick={() => handleLinkClick(link.key)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition ${
-                    isActive
-                      ? 'bg-slate-100 text-blue-700 border border-slate-300/60'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  onClick={onOpenCitizenAuth}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold border border-slate-200 transition"
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{link.label}</span>
+                  <LogIn className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Citizen Sign In</span>
                 </button>
-              );
-            })}
-          </nav>
+              )}
+            </div>
+          </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden">
+          <div className="flex md:hidden items-center gap-2">
+            {!currentUser && (
+              <button
+                type="button"
+                onClick={onOpenCitizenAuth}
+                className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold"
+              >
+                Sign In
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -112,6 +183,27 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-5 space-y-2 shadow-lg animate-fade-in">
+          {currentUser && (
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs mb-2">
+              <div>
+                <span className="font-bold text-slate-900 block">{currentUser.name}</span>
+                <span className="text-[11px] text-slate-500 font-mono">
+                  {currentUser.role === 'admin' ? 'Municipal Admin' : 'Citizen'} &bull; {currentUser.email}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-red-600 font-bold hover:underline"
+              >
+                Sign Out
+              </button>
+            </div>
+          )}
+
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = currentView === link.key;

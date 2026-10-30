@@ -74,8 +74,29 @@ export interface Report {
   assignedTo?: string;
   statusHistory: StatusHistoryItem[];
   relatedDuplicates?: Partial<Report>[];
+  citizenId?: string;
+  citizenName?: string;
+  citizenEmail?: string;
+  citizenPhone?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export type UserRole = 'citizen' | 'admin';
+
+export interface User {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  token?: string;
+  user?: User;
 }
 
 export interface HotspotActionBrief {

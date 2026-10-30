@@ -1,10 +1,103 @@
-import type { Report, DashboardStats, Hotspot, InsightsData } from '../types';
+import type { Report, DashboardStats, Hotspot, InsightsData, User, AuthResponse } from '../types';
 
 const BASE_URL = '/api';
+
+// Token and User session management in localStorage
+export function getAuthToken(): string | null {
+  return localStorage.getItem('cai_token');
+}
+
+export function setAuthToken(token: string): void {
+  localStorage.setItem('cai_token', token);
+}
+
+export function removeAuthToken(): void {
+  localStorage.removeItem('cai_token');
+  localStorage.removeItem('cai_user');
+}
+
+export function getStoredUser(): User | null {
+  const stored = localStorage.getItem('cai_user');
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: User): void {
+  localStorage.setItem('cai_user', JSON.stringify(user));
+}
+
+function getAuthHeaders(): HeadersInit {
+  const headers: Record<string, string> = {};
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+// --- Auth Endpoints ---
+
+export async function loginApi(email: string, password: string): Promise<AuthResponse> {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || 'Failed to sign in');
+  }
+  if (json.token && json.user) {
+    setAuthToken(json.token);
+    setStoredUser(json.user);
+  }
+  return json;
+}
+
+export async function signupApi(
+  name: string,
+  phone: string,
+  email: string,
+  password: string,
+  confirmPassword: string
+): Promise<AuthResponse> {
+  const response = await fetch(`${BASE_URL}/auth/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, phone, email, password, confirmPassword })
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || 'Failed to register account');
+  }
+  if (json.token && json.user) {
+    setAuthToken(json.token);
+    setStoredUser(json.user);
+  }
+  return json;
+}
+
+export async function fetchMyReports(): Promise<{ success: boolean; data: Report[]; total: number }> {
+  const response = await fetch(`${BASE_URL}/reports/my-reports`, {
+    headers: getAuthHeaders()
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    throw new Error(json.message || 'Failed to fetch your complaints');
+  }
+  return json;
+}
+
+// --- Complaints & Reports Endpoints ---
 
 export async function submitReport(formData: FormData): Promise<{ success: boolean; data: Report; message?: string }> {
   const response = await fetch(`${BASE_URL}/reports`, {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: formData
   });
   const json = await response.json();
@@ -40,7 +133,9 @@ export async function fetchReports(params: {
   if (params.search) query.append('search', params.search);
   if (params.sortBy) query.append('sortBy', params.sortBy);
 
-  const response = await fetch(`${BASE_URL}/reports?${query.toString()}`);
+  const response = await fetch(`${BASE_URL}/reports?${query.toString()}`, {
+    headers: getAuthHeaders()
+  });
   const json = await response.json();
   if (!response.ok) {
     throw new Error(json.message || 'Failed to fetch reports');
@@ -49,7 +144,9 @@ export async function fetchReports(params: {
 }
 
 export async function fetchReportById(id: string): Promise<{ success: boolean; data: Report }> {
-  const response = await fetch(`${BASE_URL}/reports/${encodeURIComponent(id)}`);
+  const response = await fetch(`${BASE_URL}/reports/${encodeURIComponent(id)}`, {
+    headers: getAuthHeaders()
+  });
   const json = await response.json();
   if (!response.ok) {
     throw new Error(json.message || `Failed to fetch report #${id}`);
@@ -65,7 +162,10 @@ export async function updateReportStatus(
 ): Promise<{ success: boolean; data: Report }> {
   const response = await fetch(`${BASE_URL}/reports/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    },
     body: JSON.stringify({ status, note, changedBy })
   });
   const json = await response.json();
@@ -83,7 +183,10 @@ export async function assignReport(
 ): Promise<{ success: boolean; data: Report }> {
   const response = await fetch(`${BASE_URL}/reports/${encodeURIComponent(id)}/assign`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    },
     body: JSON.stringify({ department, assignedTo, note })
   });
   const json = await response.json();
@@ -100,7 +203,10 @@ export async function updateDuplicateStatus(
 ): Promise<{ success: boolean; data: Report }> {
   const response = await fetch(`${BASE_URL}/reports/${encodeURIComponent(id)}/duplicate-status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    },
     body: JSON.stringify({ status, note })
   });
   const json = await response.json();

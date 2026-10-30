@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { connectDB, disconnectDB } from '../config/db.js';
 import { Report } from '../models/Report.js';
 import { findDuplicatesInPool } from '../services/duplicate/duplicateService.js';
+import { ensureDemoAdmin } from '../utils/initAdmin.js';
 
 // Base coordinates around a central civic zone (e.g., Central District: 12.9716, 77.5946)
 const HOTSPOT_CENTER = { lat: 12.9716, lon: 77.5946, address: 'Main Road / Commercial Cross' };
@@ -557,6 +558,9 @@ export async function seedDatabase() {
   try {
     console.log('[Seed] Connecting to database...');
     await connectDB();
+
+    console.log('[Seed] Ensuring demo admin account...');
+    await ensureDemoAdmin();
 
     console.log('[Seed] Clearing existing reports...');
     await Report.deleteMany({});

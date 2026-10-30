@@ -3,12 +3,14 @@ dotenv.config();
 
 import { app } from './app.js';
 import { connectDB } from './config/db.js';
+import { ensureDemoAdmin } from './utils/initAdmin.js';
 
 const PORT = process.env.PORT || 5000;
 
 async function bootstrap() {
   try {
     await connectDB();
+    await ensureDemoAdmin();
     app.listen(PORT, () => {
       console.log(`=======================================================`);
       console.log(`  CivicActionAI Backend running on port ${PORT}`);

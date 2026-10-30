@@ -17,16 +17,25 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { fetchReports, fetchDashboardStats, fetchHotspots } from '../services/api';
-import { Report, DashboardStats, Hotspot } from '../types';
+import { Report, DashboardStats, Hotspot, User } from '../types';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { StatusBadge } from '../components/StatusBadge';
 import { CivicMap } from '../components/CivicMap';
+import { AdminLoginView } from '../components/AdminLoginView';
+import { getStoredUser } from '../services/api';
 
 interface AdminDashboardProps {
   onNavigate: (view: string, param?: string) => void;
+  currentUser?: User | null;
+  onAdminLogin?: (user: User) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({
+  onNavigate,
+  currentUser,
+  onAdminLogin
+}) => {
+  const activeUser = currentUser || getStoredUser();
   const [reports, setReports] = useState<Report[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [hotspots, setHotspots] = useState<Hotspot[]>([]);
@@ -88,6 +97,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) =>
     }, 400);
     return () => clearTimeout(handler);
   }, [search]);
+
+  if (!activeUser || activeUser.role !== 'admin') {
+    return (
+      <AdminLoginView
+        onLoginSuccess={(adminUser) => {
+          if (onAdminLogin) onAdminLogin(adminUser);
+          loadData();
+        }}
+        onCancel={() => onNavigate('home')}
+      />
+    );
+  }
 
   return (
     <div className="py-6 sm:py-8 space-y-6">

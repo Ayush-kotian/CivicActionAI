@@ -152,6 +152,30 @@ Every duplicate match generates plain-language, audit-ready bullet points:
 - *Identical civic category: Road Damage*
 - *Located in immediate proximity (approx. 31m away)*
 
+### E. Interactive Location Selection Engine
+
+The complaint submission interface features an interactive multi-input map location selector where all inputs control a single synchronized marker:
+1. **Address Search**: Type an address or landmark (e.g. *"Main Road"*, *"College Gate"*) &rarr; geocodes and places marker.
+2. **Coordinate Input**: Direct numeric latitude and longitude fields &rarr; dynamically moves marker and centers map.
+3. **Map Click**: Click anywhere on the map &rarr; marker moves and lat/long fields update automatically.
+4. **Marker Drag**: Draggable marker allows fine-tuning exact incident coordinates.
+- Final selected latitude, longitude, and address are saved with the complaint in MongoDB.
+
+### F. Authentication & Server-Side Authorization
+
+CivicActionAI provides a clear separation of citizen and municipal authority roles:
+- **Citizen Registration & Sign In**: Required fields (Name, Phone Number, Email, Password &ge; 6 chars, Confirm Password). Role is strictly enforced as `'citizen'`.
+- **Citizen Workspace**: Signed-in citizens can submit complaints, view their own complaint history under **My Complaints**, and track live resolution status.
+- **Single Predefined Demo Admin**:
+  ```text
+  Name:     Rajesh
+  Email:    rajesh@gmail.com
+  Password: 123456
+  Role:     admin
+  ```
+- **Authority Login Portal**: Clicking **Authority Desk** opens a dedicated login screen featuring a **[ Use Demo Account ]** quick-fill button.
+- **Backend Authorization Enforcement**: Admin routes (`GET /api/reports`, `PATCH /assign`, `PATCH /status`, `PATCH /duplicate-status`) strictly require `role === 'admin'`. Attempting to access admin routes with a citizen account or invalid token immediately returns `403 Forbidden`.
+
 ---
 
 ## 6. Tech Stack
@@ -256,8 +280,8 @@ Test Results:
 - `hotspot.test.js` &bull; 1 passed (Geospatial clustering & Action Brief synthesis)
 - `duplicate.test.js` &bull; 6 passed (Strong/likely tiers, distant non-duplicates, coordinate fallback, explainable checklist reasons)
 - `aiFallback.test.js` &bull; 4 passed (Deterministic civic rules, hazard keywords, priority weights)
-- `api.test.js` &bull; 11 passed (HTTP intake, AI analysis, duplicate linking, non-deletion verification, authority review, workflow transitions, tracking)
-- **Total: 22 passed (100%)**
+- `api.test.js` &bull; 16 passed (Citizen signup, signin, demo admin, 403 authorization enforcement, my-reports, duplicate review, workflow transitions, tracking)
+- **Total: 27 passed (100%)**
 
 ---
 
