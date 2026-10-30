@@ -181,13 +181,13 @@ export async function getReports(req, res, next) {
     if (duplicateOnly === 'true') {
       query.duplicatePossible = true;
     }
-    if (search && search.trim()) {
-      const s = search.trim();
+    if (search && typeof search === 'string' && search.trim()) {
+      const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { complaintId: { $regex: s, $options: 'i' } },
-        { description: { $regex: s, $options: 'i' } },
-        { summary: { $regex: s, $options: 'i' } },
-        { 'location.address': { $regex: s, $options: 'i' } }
+        { complaintId: { $regex: sanitizedSearch, $options: 'i' } },
+        { description: { $regex: sanitizedSearch, $options: 'i' } },
+        { summary: { $regex: sanitizedSearch, $options: 'i' } },
+        { 'location.address': { $regex: sanitizedSearch, $options: 'i' } }
       ];
     }
 

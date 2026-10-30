@@ -103,7 +103,17 @@ export async function signup(req, res, next) {
 export async function login(req, res, next) {
   try {
     const { email, username, identifier, password } = req.body;
-    const loginId = (email || username || identifier || '').toLowerCase().trim();
+    if (typeof password !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be a valid string.'
+      });
+    }
+
+    const rawId = (typeof email === 'string' && email) || 
+                  (typeof username === 'string' && username) || 
+                  (typeof identifier === 'string' && identifier) || '';
+    const loginId = rawId.toLowerCase().trim();
 
     if (!loginId || !password) {
       return res.status(400).json({

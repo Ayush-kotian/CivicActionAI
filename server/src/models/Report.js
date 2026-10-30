@@ -233,5 +233,7 @@ const ReportSchema = new mongoose.Schema({
 ReportSchema.index({ createdAt: -1 });
 ReportSchema.index({ status: 1, priority: 1 });
 ReportSchema.index({ category: 1 });
+ReportSchema.index({ citizenId: 1, createdAt: -1 });
+ReportSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
 
 export const Report = mongoose.model('Report', ReportSchema);
